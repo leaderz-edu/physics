@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinematics Interactive: Velocity & Displacement</title>
+    <meta name="description"
+        content="Interactive physics simulation exploring kinematics: unit conversion, average velocity vs speed, and instantaneous velocity with real-time graphs.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Kufi+Arabic:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'Noto Kufi Arabic', 'sans-serif'] } } } }</script>
+</head>
+
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen font-sans text-white">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-slate-700/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <!-- Physics Atom Logo -->
+                    <svg class="w-10 h-10 physics-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <filter id="glow">
+                                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <!-- Orbit 1 -->
+                        <ellipse cx="50" cy="50" rx="35" ry="15" fill="none" stroke="#14b8a6" stroke-width="2"
+                            opacity="0.8" filter="url(#glow)">
+                            <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50"
+                                dur="8s" repeatCount="indefinite" />
+                        </ellipse>
+                        <!-- Orbit 2 -->
+                        <ellipse cx="50" cy="50" rx="35" ry="15" fill="none" stroke="#06b6d4" stroke-width="2"
+                            opacity="0.7" filter="url(#glow)">
+                            <animateTransform attributeName="transform" type="rotate" from="60 50 50" to="420 50 50"
+                                dur="8s" repeatCount="indefinite" />
+                        </ellipse>
+                        <!-- Orbit 3 -->
+                        <ellipse cx="50" cy="50" rx="35" ry="15" fill="none" stroke="#22d3ee" stroke-width="2"
+                            opacity="0.6" filter="url(#glow)">
+                            <animateTransform attributeName="transform" type="rotate" from="120 50 50" to="480 50 50"
+                                dur="8s" repeatCount="indefinite" />
+                        </ellipse>
+                        <!-- Nucleus -->
+                        <circle cx="50" cy="50" r="6" fill="#fff" filter="url(#glow)">
+                            <animate attributeName="r" values="6;7;6" dur="2s" repeatCount="indefinite" />
+                        </circle>
+                    </svg>
+                    <div>
+                        <h1 class="text-lg font-bold bg-gradient-to-r from-teal-300 to-cyan-400 bg-clip-text text-transparent"
+                            data-i18n="title">Kinematics Interactive</h1>
+                        <p class="text-xs text-slate-400" data-i18n="subtitle">Velocity &amp; Displacement</p>
+                    </div>
+                </div>
+                <button id="langToggle"
+                    class="px-4 py-2 rounded-lg bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 text-sm font-medium transition-all duration-300 hover:scale-105">عربي</button>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex gap-1 pb-3 overflow-x-auto scrollbar-hide" id="tabNav">
+                <button
+                    class="tab-btn active whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                    data-tab="converter" data-i18n="tabConverter">Unit Converter</button>
+                <button
+                    class="tab-btn whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                    data-tab="slope" data-i18n="tabSlope">Slope Calculator</button>
+                <button
+                    class="tab-btn whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                    data-tab="avgCalc" data-i18n="tabAvgCalc">Avg. Velocity Calculator</button>
+                <button
+                    class="tab-btn whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                    data-tab="uniform" data-i18n="tabUniform">Uniform Motion</button>
+                <button
+                    class="tab-btn whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                    data-tab="average" data-i18n="tabAverage">Average Velocity</button>
+                <button
+                    class="tab-btn whitespace-nowrap px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300"
+                    data-tab="instantaneous" data-i18n="tabInstantaneous">Instantaneous Velocity</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ========== Tab 1: Unit Converter ========== -->
+        <section id="tab-converter" class="tab-content">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold mb-2" data-i18n="converterTitle">The Unit Master</h2>
+                <p class="text-slate-400" data-i18n="converterDesc">Convert between metric prefixes with visual
+                    calculation steps</p>
+            </div>
+            <div class="max-w-2xl mx-auto">
+                <div class="glass-card rounded-2xl p-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-1" data-i18n="inputValue">Enter Value</label>
+                            <input type="number" id="convertValue" value="5"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-lg text-white focus:outline-none focus:border-teal-400 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-1" data-i18n="fromPrefix">From</label>
+                            <select id="fromUnit"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-lg text-white focus:outline-none focus:border-teal-400 transition-colors"></select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-slate-400 mb-1" data-i18n="toPrefix">To</label>
+                            <select id="toUnit"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-lg text-white focus:outline-none focus:border-teal-400 transition-colors"></select>
+                        </div>
+                    </div>
+                    <button id="convertBtn"
+                        class="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 font-semibold text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                        data-i18n="convertBtn">Convert</button>
+                </div>
+                <div id="convertResult" class="glass-card rounded-2xl p-6 hidden">
+                    <h3 class="text-lg font-semibold mb-3 text-teal-300" data-i18n="result">Result</h3>
+                    <div id="resultValue" class="text-2xl font-bold mb-4"></div>
+                    <h3 class="text-lg font-semibold mb-3 text-teal-300" data-i18n="steps">Calculation Steps</h3>
+                    <div id="resultSteps" class="text-slate-300 space-y-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== Tab 2: Slope Calculator ========== -->
+        <section id="tab-slope" class="tab-content hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold mb-2" data-i18n="slopeTitle">Graph Slope Calculator</h2>
+                <p class="text-slate-400" data-i18n="slopeDesc">Calculate the slope of a Position-Time graph to find
+                    velocity</p>
+            </div>
+            <div class="glass-card rounded-2xl p-6 mb-6 max-w-3xl mx-auto">
+                <div class="text-center mb-4">
+                    <div id="slopeFormula" class="text-2xl text-teal-300"></div>
+                </div>
+                <p class="text-center text-slate-400 text-sm" data-i18n="slopeFormulaDesc">The slope of the
+                    Position-Time graph equals the average velocity</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto mb-6">
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-rose-400" data-i18n="runner1Title">Runner 1 (Red)</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div><label class="block text-sm text-slate-400 mb-1">d<sub>i</sub> (m)</label><input
+                                type="number" id="r1di" value="2.0" step="0.1"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-400 transition-colors">
+                        </div>
+                        <div><label class="block text-sm text-slate-400 mb-1">d<sub>f</sub> (m)</label><input
+                                type="number" id="r1df" value="3.0" step="0.1"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-400 transition-colors">
+                        </div>
+                        <div><label class="block text-sm text-slate-400 mb-1">t<sub>i</sub> (s)</label><input
+                                type="number" id="r1ti" value="2.0" step="0.1"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-400 transition-colors">
+                        </div>
+                        <div><label class="block text-sm text-slate-400 mb-1">t<sub>f</sub> (s)</label><input
+                                type="number" id="r1tf" value="3.0" step="0.1"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-rose-400 transition-colors">
+                        </div>
+                    </div>
+                    <div id="r1Steps" class="space-y-2 text-sm"></div>
+                </div>
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-semibold mb-4 text-cyan-400" data-i18n="runner2Title">Runner 2 (Gray)</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div><label class="block text-sm text-slate-400 mb-1">d<sub>i</sub> (m)</label><input
+                                type="number" id="r2di" value="2.0" step="0.1"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 transition-colors">
+                        </div>
+                        <div><label class="block text-sm text-slate-400 mb-1">d<sub>f</sub> (m)</label><input
+                                type="number" id="r2df" value="6.0" step="0.1"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 transition-colors">
+                        </div>
+                        <div><label class="block text-sm text-slate-400 mb-1">t<sub>i</sub> (s)</label><input
+                                type="number" id="r2ti" value="1.0" step="0.1"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 transition-colors">
+                        </div>
+                        <div><label class="block text-sm text-slate-400 mb-1">t<sub>f</sub> (s)</label><input
+                                type="number" id="r2tf" value="3.0" step="0.1"
+                                class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-400 transition-colors">
+                        </div>
+                    </div>
+                    <div id="r2Steps" class="space-y-2 text-sm"></div>
+                </div>
+            </div>
+            <div class="max-w-5xl mx-auto mb-6"><button id="calcSlopeBtn"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 font-semibold text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    data-i18n="calcSlopeBtn">Calculate Slopes</button></div>
+            <div class="chart-wrapper glass-card rounded-2xl p-4 max-w-5xl mx-auto">
+                <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Fullscreen">⛶</button>
+                <div class="chart-hover-tooltip" id="slopeTooltip"></div>
+                <h3 class="text-sm font-semibold text-slate-400 mb-2" data-i18n="comparisonGraph">Comparison Graph</h3>
+                <canvas id="slopeChart" class="w-full rounded-xl" style="max-height:260px;"></canvas>
+            </div>
+        </section>
+
+        <!-- ========== Tab 3: Avg. Velocity Calculator ========== -->
+        <section id="tab-avgCalc" class="tab-content hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold mb-2" data-i18n="avgCalcTitle">Average Velocity Calculator</h2>
+                <p class="text-slate-400" data-i18n="avgCalcDesc">Enter values to calculate average velocity with
+                    step-by-step solution</p>
+            </div>
+            <div class="glass-card rounded-2xl p-6 mb-6 max-w-3xl mx-auto">
+                <div id="avgCalcFormula" class="text-2xl text-center text-teal-300 mb-3"></div>
+                <p class="text-center text-slate-400 text-sm" data-i18n="avgCalcFormulaDesc">Average velocity is the
+                    change in position (displacement) divided by the time interval</p>
+            </div>
+            <div class="glass-card rounded-2xl p-6 mb-6 max-w-3xl mx-auto">
+                <h3 class="text-lg font-semibold mb-4 text-teal-300" data-i18n="enterValues">Enter Known Values</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div><label class="block text-sm text-slate-400 mb-1">d<sub>i</sub> (m)</label><input type="number"
+                            id="avgDi" value="6.0" step="0.1"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                    <div><label class="block text-sm text-slate-400 mb-1">d<sub>f</sub> (m)</label><input type="number"
+                            id="avgDf" value="12.0" step="0.1"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                    <div><label class="block text-sm text-slate-400 mb-1">t<sub>i</sub> (s)</label><input type="number"
+                            id="avgTi" value="3.5" step="0.1"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                    <div><label class="block text-sm text-slate-400 mb-1">t<sub>f</sub> (s)</label><input type="number"
+                            id="avgTf" value="7.0" step="0.1"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                </div>
+                <button id="calcAvgVelBtn"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 font-semibold text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    data-i18n="calculateBtn">Calculate</button>
+            </div>
+            <div id="avgCalcResult" class="glass-card rounded-2xl p-6 mb-6 max-w-3xl mx-auto hidden">
+                <h3 class="text-lg font-semibold mb-3 text-teal-300" data-i18n="stepByStep">Step-by-Step Solution</h3>
+                <div id="avgCalcSteps" class="space-y-3"></div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-6">
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="displacementResult">Displacement</p>
+                    <p class="text-xl font-bold text-cyan-400 font-mono" id="avgDisplacementVal">&mdash;</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="timeIntervalResult">Time Interval</p>
+                    <p class="text-xl font-bold text-amber-400 font-mono" id="avgTimeIntervalVal">&mdash;</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="avgVelocityResult">Average Velocity</p>
+                    <p class="text-xl font-bold text-rose-400 font-mono" id="avgVelocityCalcVal">&mdash;</p>
+                </div>
+            </div>
+            <div id="avgEvaluation" class="glass-card rounded-2xl p-6 max-w-3xl mx-auto hidden">
+                <h3 class="text-lg font-semibold mb-3 text-amber-300" data-i18n="answerEvaluation">Answer Evaluation
+                </h3>
+                <div id="avgEvalContent" class="space-y-2 text-sm"></div>
+            </div>
+        </section>
+
+        <!-- ========== Tab 4: Uniform Motion ========== -->
+        <section id="tab-uniform" class="tab-content hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold mb-2" data-i18n="uniformTitle">Uniform Motion Equation</h2>
+                <p class="text-slate-400" data-i18n="uniformDesc">Explore d = v̄·t + d_i with an interactive graph</p>
+            </div>
+            <div class="glass-card rounded-2xl p-6 mb-6 max-w-4xl mx-auto">
+                <div id="uniformFormula" class="text-2xl text-center text-teal-300 mb-3"></div>
+                <p class="text-center text-slate-400 text-sm" data-i18n="uniformFormulaDesc">Position = velocity × time
+                    + initial position</p>
+            </div>
+            <div class="glass-card rounded-2xl p-6 mb-6 max-w-4xl mx-auto">
+                <h3 class="text-lg font-semibold mb-4 text-teal-300" data-i18n="parameters">Parameters</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div><label class="block text-sm text-slate-400 mb-1" data-i18n="uniformVelocity">Velocity v̄
+                            (m/s)</label><input type="number" id="uniformV" value="1.7" step="0.1"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                    <div><label class="block text-sm text-slate-400 mb-1" data-i18n="uniformDi">Initial Position d_i
+                            (m)</label><input type="number" id="uniformDi" value="2.0" step="0.1"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                    <div><label class="block text-sm text-slate-400 mb-1" data-i18n="uniformTmax">Max Time
+                            (s)</label><input type="number" id="uniformTmax" value="10" step="1" min="1"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                </div>
+                <button id="uniformPlotBtn"
+                    class="w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 font-semibold text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    data-i18n="plotGraph">Plot Graph</button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-6">
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1">v̄</p>
+                    <p class="text-xl font-bold text-teal-400 font-mono" id="uniformVVal">1.7 m/s</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1">d<sub>i</sub></p>
+                    <p class="text-xl font-bold text-cyan-400 font-mono" id="uniformDiVal">2.0 m</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="currentTime">Current Time</p>
+                    <p class="text-xl font-bold text-amber-400 font-mono" id="uniformTVal">&mdash;</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="currentPos">Current Position</p>
+                    <p class="text-xl font-bold text-rose-400 font-mono" id="uniformDVal">&mdash;</p>
+                </div>
+            </div>
+            <div class="chart-wrapper glass-card rounded-2xl p-4 max-w-4xl mx-auto mb-6">
+                <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Fullscreen">⛶</button>
+                <div class="chart-hover-tooltip" id="uniformTooltip"></div>
+                <h3 class="text-sm font-semibold text-slate-400 mb-2" data-i18n="positionTimeGraph">Position-Time Graph
+                </h3>
+                <canvas id="uniformChart" class="w-full rounded-xl" style="max-height:260px;"></canvas>
+            </div>
+            <div class="glass-card rounded-2xl p-6 max-w-4xl mx-auto">
+                <h3 class="text-lg font-semibold mb-3 text-teal-300" data-i18n="positionTable">Position Table</h3>
+                <div class="overflow-x-auto">
+                    <table id="uniformTable" class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-700">
+                                <th class="py-2 px-3 text-slate-400 font-medium" data-i18n="timeCol">Time (s)</th>
+                                <th class="py-2 px-3 text-slate-400 font-medium" data-i18n="positionCol">Position (m)
+                                </th>
+                                <th class="py-2 px-3 text-slate-400 font-medium" data-i18n="calculationCol">Calculation
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="uniformTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== Tab 5: Average Velocity (Animation) ========== -->
+        <section id="tab-average" class="tab-content hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold mb-2" data-i18n="avgTitle">Average Velocity vs. Speed</h2>
+                <p class="text-slate-400" data-i18n="avgDesc">Watch how distance and displacement differ on a curved
+                    path</p>
+            </div>
+            <!-- User Controls -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4 text-teal-300" data-i18n="avgParams">Simulation Parameters</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1" data-i18n="avgSpeedInput">Object Speed
+                            (m/s)</label>
+                        <input type="number" id="avgSpeedInput" value="50" min="5" max="500" step="5"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1" data-i18n="avgCurveInput">Path
+                            Curvature</label>
+                        <input type="range" id="avgCurveInput" min="0" max="100" value="60" class="w-full mt-3">
+                        <div class="flex justify-between text-xs text-slate-500"><span
+                                data-i18n="straight">Straight</span><span data-i18n="curvy">Very Curvy</span></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1" data-i18n="timeSlider">Time Duration
+                            (s)</label>
+                        <input type="number" id="avgTimeDuration" value="5" min="1" max="30" step="0.5"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                </div>
+            </div>
+            <!-- Vehicle selector -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <h3 class="text-sm font-semibold mb-3 text-slate-400" data-i18n="chooseModel">Choose Model</h3>
+                <div class="vehicle-grid" id="avgVehicles">
+                    <div class="vehicle-option selected" data-vehicle="car" title="Car">🚗</div>
+                    <div class="vehicle-option" data-vehicle="ball" title="Ball">⚽</div>
+                    <div class="vehicle-option" data-vehicle="bicycle" title="Bicycle">🚲</div>
+                    <div class="vehicle-option" data-vehicle="motorcycle" title="Motorcycle">🏍️</div>
+                    <div class="vehicle-option" data-vehicle="truck" title="Truck">🚛</div>
+                    <div class="vehicle-option" data-vehicle="plane" title="Plane">✈️</div>
+                    <div class="vehicle-option" data-vehicle="rocket" title="Rocket">🚀</div>
+                    <div class="vehicle-option" data-vehicle="person" title="Runner">🏃</div>
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-center gap-6 mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-1 rounded bg-cyan-400"></div><span class="text-sm text-slate-300"
+                        data-i18n="path">Path (Distance)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-1 rounded bg-rose-400"></div><span class="text-sm text-slate-300"
+                        data-i18n="displacementVector">Displacement Vector</span>
+                </div>
+            </div>
+            <div class="chart-wrapper glass-card rounded-2xl p-2 sm:p-4 mb-6">
+                <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Fullscreen">⛶</button>
+                <canvas id="carCanvas" class="w-full rounded-xl"></canvas>
+            </div>
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <div class="flex flex-wrap items-center gap-4 justify-center">
+                    <button id="startBtn"
+                        class="px-6 py-3 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 font-semibold transition-all duration-300 hover:scale-105 active:scale-95 pulse-animation"
+                        data-i18n="startBtn">Start</button>
+                    <button id="resetBtn"
+                        class="px-6 py-3 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/50 font-semibold transition-all duration-300 hover:scale-105 active:scale-95"
+                        data-i18n="resetBtn">Reset</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="distanceTraveled">Distance Traveled</p>
+                    <p class="text-xl font-bold text-cyan-400" id="distanceVal">0 m</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="displacement">Displacement</p>
+                    <p class="text-xl font-bold text-rose-400" id="displacementVal">0 m</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="avgSpeed">Average Speed</p>
+                    <p class="text-xl font-bold text-cyan-300" id="avgSpeedVal">0 m/s</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="avgVelocity">Average Velocity</p>
+                    <p class="text-xl font-bold text-rose-300" id="avgVelVal">0 m/s</p>
+                </div>
+            </div>
+            <!-- Distance & Displacement Graph -->
+            <div class="chart-wrapper glass-card rounded-2xl p-4">
+                <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Fullscreen">⛶</button>
+                <div class="chart-hover-tooltip" id="avgChartTooltip"></div>
+                <h3 class="text-sm font-semibold text-slate-400 mb-2" data-i18n="distDispGraph">Distance & Displacement
+                    vs. Time</h3>
+                <canvas id="avgVelChart" class="w-full rounded-xl" style="max-height:260px;"></canvas>
+            </div>
+        </section>
+
+        <!-- ========== Tab 6: Instantaneous Velocity ========== -->
+        <section id="tab-instantaneous" class="tab-content hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold mb-2" data-i18n="instTitle">Instantaneous Velocity</h2>
+                <p class="text-slate-400" data-i18n="instDesc">Hover over the graph to see the tangent line and
+                    instantaneous velocity</p>
+            </div>
+            <!-- Vehicle selector -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <h3 class="text-sm font-semibold mb-3 text-slate-400" data-i18n="chooseModel">Choose Model</h3>
+                <div class="vehicle-grid" id="instVehicles">
+                    <div class="vehicle-option" data-vehicle="car" title="Car">🚗</div>
+                    <div class="vehicle-option" data-vehicle="ball" title="Ball">⚽</div>
+                    <div class="vehicle-option" data-vehicle="bicycle" title="Bicycle">🚲</div>
+                    <div class="vehicle-option" data-vehicle="motorcycle" title="Motorcycle">🏍️</div>
+                    <div class="vehicle-option" data-vehicle="truck" title="Truck">🚛</div>
+                    <div class="vehicle-option selected" data-vehicle="plane" title="Plane">✈️</div>
+                    <div class="vehicle-option" data-vehicle="rocket" title="Rocket">🚀</div>
+                    <div class="vehicle-option" data-vehicle="person" title="Runner">🏃</div>
+                </div>
+            </div>
+            <!-- User Controls -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-4 text-teal-300" data-i18n="controlsTitle">Simulation Parameters
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                    <div><label class="block text-sm text-slate-400 mb-1" data-i18n="initialVelocityLabel">Initial
+                            Velocity V₀ (m/s)</label><input type="number" id="inputV0" value="25" min="1" max="100"
+                            step="0.5"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-lg text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                    <div><label class="block text-sm text-slate-400 mb-1" data-i18n="gravityLabel">Gravitational
+                            Acceleration g (m/s²)</label><input type="number" id="inputG" value="9.8" min="0.1" max="30"
+                            step="0.1"
+                            class="w-full bg-slate-800/50 border border-slate-600/50 rounded-xl px-4 py-3 text-lg text-white focus:outline-none focus:border-teal-400 transition-colors">
+                    </div>
+                </div>
+                <button id="applyParamsBtn"
+                    class="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 font-semibold text-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    data-i18n="applyBtn">Apply & Simulate</button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="paramV0">V₀</p>
+                    <p class="text-xl font-bold text-teal-400 font-mono" id="paramV0Val">25 m/s</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="paramG">g</p>
+                    <p class="text-xl font-bold text-cyan-400 font-mono" id="paramGVal">9.8 m/s²</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="maxHeight">Max Height</p>
+                    <p class="text-xl font-bold text-amber-400 font-mono" id="paramSmaxVal">31.89 m</p>
+                </div>
+                <div class="glass-card rounded-xl p-4 text-center">
+                    <p class="text-xs text-slate-400 mb-1" data-i18n="totalTime">Total Flight Time</p>
+                    <p class="text-xl font-bold text-rose-400 font-mono" id="paramTtotalVal">5.10 s</p>
+                </div>
+            </div>
+            <!-- Simulation + Graphs side by side -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="chart-wrapper glass-card rounded-2xl p-4">
+                    <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Fullscreen">⛶</button>
+                    <h3 class="text-sm font-semibold text-slate-400 mb-2" data-i18n="simulation">Simulation</h3>
+                    <canvas id="planeCanvas" class="w-full rounded-xl"></canvas>
+                </div>
+                <div class="chart-wrapper glass-card rounded-2xl p-4">
+                    <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Fullscreen">⛶</button>
+                    <div class="chart-hover-tooltip" id="posTooltip"></div>
+                    <h3 class="text-sm font-semibold text-slate-400 mb-2" data-i18n="positionTimeGraph">Position-Time
+                        Graph</h3>
+                    <canvas id="posTimeChart" class="w-full rounded-xl" style="max-height:260px;"></canvas>
+                </div>
+            </div>
+            <!-- Velocity-Time Graph -->
+            <div class="chart-wrapper glass-card rounded-2xl p-4 mb-6">
+                <button class="fullscreen-btn" onclick="toggleFullscreen(this)" title="Fullscreen">⛶</button>
+                <div class="chart-hover-tooltip" id="velTooltip"></div>
+                <h3 class="text-sm font-semibold text-slate-400 mb-2" data-i18n="velocityTimeGraph">Velocity-Time Graph
+                </h3>
+                <canvas id="velTimeChart" class="w-full rounded-xl" style="max-height:240px;"></canvas>
+            </div>
+            <!-- Hover Info -->
+            <div class="glass-card rounded-2xl p-6 mb-6">
+                <p class="text-center text-slate-400 mb-4" data-i18n="hoverInstruction">Hover over the curve to see the
+                    tangent line</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="text-center">
+                        <p class="text-xs text-slate-400" data-i18n="time">Time</p>
+                        <p class="text-xl font-bold text-teal-400 font-mono" id="instTimeVal">&mdash; s</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-slate-400" data-i18n="currentPosition">Current Position</p>
+                        <p class="text-xl font-bold text-cyan-400 font-mono" id="instPosVal">&mdash; m</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-xs text-slate-400" data-i18n="currentVelocity">Instantaneous Velocity (Slope)</p>
+                        <p class="text-xl font-bold text-rose-400 font-mono" id="instVelVal">&mdash; m/s</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Equations -->
+            <div class="glass-card rounded-2xl p-6">
+                <h3 class="text-lg font-semibold mb-4 text-teal-300" data-i18n="equationsTitle">Kinematic Equations</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-slate-800/50 rounded-xl">
+                        <p class="text-sm text-slate-400 mb-2" data-i18n="eqPosition">Position as a function of time</p>
+                        <div id="eq1" class="text-xl text-center text-cyan-300 font-mono"></div>
+                    </div>
+                    <div class="p-4 bg-slate-800/50 rounded-xl">
+                        <p class="text-sm text-slate-400 mb-2" data-i18n="eqVelocity">Velocity as a function of time</p>
+                        <div id="eq2" class="text-xl text-center text-rose-300 font-mono"></div>
+                    </div>
+                    <div class="p-4 bg-slate-800/50 rounded-xl">
+                        <p class="text-sm text-slate-400 mb-2" data-i18n="eqMaxHeight">Maximum height</p>
+                        <div id="eq3" class="text-xl text-center text-amber-300 font-mono"></div>
+                    </div>
+                    <div class="p-4 bg-slate-800/50 rounded-xl">
+                        <p class="text-sm text-slate-400 mb-2" data-i18n="eqTotalTime">Total flight time</p>
+                        <div id="eq4" class="text-xl text-center text-emerald-300 font-mono"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center py-8 text-slate-500 text-sm border-t border-slate-800 space-y-2">
+        <p data-i18n="footer">Developed by Team Leaders</p>
+        <p data-i18n="footerThanks">Special thanks to Eng. Fares Al-Matrudi & Saif Al-Otaibi</p>
+        <p data-i18n="footerRights">All rights reserved to Team Leaders</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
